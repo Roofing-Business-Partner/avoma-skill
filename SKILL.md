@@ -39,6 +39,12 @@ Interact with Avoma's meeting intelligence platform via REST API v1. Use when wo
 |--------|---------|-------|
 | `avoma-revenue-intel.sh` | Timeline engagement metrics | `OBJECT_TYPE START [--entity-id ID --interval week]` |
 
+### Workflow Helpers
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `avoma-recent.sh` | List recent meetings with UUIDs | `[DAYS_BACK] [--calls-only\|--external-only]` |
+| `avoma-meeting-full.sh` | Pull all data for one meeting | `MEETING_UUID [OUTPUT_DIR]` |
+
 ### Configuration & Metadata
 | Script | Purpose | Usage |
 |--------|---------|-------|
@@ -49,6 +55,18 @@ Interact with Avoma's meeting intelligence platform via REST API v1. Use when wo
 | `avoma-templates.sh` | List note templates | `[UUID]` |
 
 ## Common Patterns
+
+### Pull all data for a meeting at once (recommended)
+```bash
+SCRIPTS=~/.openclaw/workspace/skills/avoma/scripts
+# Step 1: find the UUID
+bash $SCRIPTS/avoma-recent.sh 14
+# Step 2: pull everything
+bash $SCRIPTS/avoma-meeting-full.sh <UUID> ./output/meeting-name/
+# Step 3: read locally — no more API calls
+cat ./output/meeting-name/transcript.txt
+jq '.' ./output/meeting-name/notes.json
+```
 
 ### Get all meetings from last 7 days with transcripts
 ```bash
