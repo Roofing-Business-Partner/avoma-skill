@@ -62,6 +62,12 @@ bash scripts/avoma-engagement.sh 2026-01-01 2026-03-31 --summary
 | `avoma-scorecard-evals.sh` | List scorecard evaluations (filter by date, meeting, user, scorecard) |
 | `avoma-engagement.sh` | Engagement analytics — who's listening, sharing, commenting on meetings |
 
+### Workflow Helpers
+| Script | What it does |
+|--------|-------------|
+| `avoma-recent.sh` | Quick list of recent meetings with UUIDs — first step before pulling data |
+| `avoma-meeting-full.sh` | One-shot pull: transcript + notes + insights + snippets + sentiments for one meeting |
+
 ### Revenue Intelligence (Beta)
 | Script | What it does |
 |--------|-------------|
@@ -88,6 +94,13 @@ All scripts source `scripts/avoma-config.sh` which handles:
 
 ```bash
 SCRIPTS=./scripts
+
+# Quick lookup: recent meetings → grab a UUID
+bash $SCRIPTS/avoma-recent.sh 7
+
+# Pull everything for a meeting at once (no repeated API calls)
+bash $SCRIPTS/avoma-meeting-full.sh <UUID> ./output/client-name/
+cat ./output/client-name/transcript.txt
 
 # All external meetings this month with transcripts ready
 bash $SCRIPTS/avoma-meetings.sh 2026-04-01 2026-04-30 --external-only --page-size 100 \

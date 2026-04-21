@@ -6,7 +6,7 @@ set -euo pipefail
 
 AVOMA_BASE_URL="https://api.avoma.com/v1"
 
-# Load API key from .env
+# Load API key: environment > .env files > openclaw.json (OpenClaw agents)
 if [ -z "${AVOMA_API_KEY:-}" ]; then
   for env_file in ~/.openclaw/.env ~/.openclaw/workspace/.env; do
     if [ -f "$env_file" ]; then
@@ -16,8 +16,18 @@ if [ -z "${AVOMA_API_KEY:-}" ]; then
   done
 fi
 
+# Fallback: read from openclaw.json (OpenClaw agents store keys there)
+if [ -z "${AVOMA_API_KEY:-}" ] && command -v jq &>/dev/null; then
+  for cfg in ~/.openclaw/openclaw.json ~/.openclaw/workspace/openclaw.json; do
+    if [ -f "$cfg" ]; then
+      AVOMA_API_KEY=$(jq -r '.skills.entries.avoma.apiKey // empty' "$cfg" 2>/dev/null)
+      [ -n "$AVOMA_API_KEY" ] && break
+    fi
+  done
+fi
+
 if [ -z "${AVOMA_API_KEY:-}" ]; then
-  echo "ERROR: AVOMA_API_KEY not found in environment or .env files" >&2
+  echo "ERROR: AVOMA_API_KEY not found. Set via env var, ~/.openclaw/.env, or openclaw.json." >&2
   exit 1
 fi
 
