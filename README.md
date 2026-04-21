@@ -4,6 +4,8 @@ Reusable bash scripts for the [Avoma](https://avoma.com) meeting intelligence AP
 
 **What it does:** Pull meeting transcripts, AI notes, call recordings, scorecard evaluations, engagement analytics, and revenue intelligence from Avoma — without rewriting curl commands or burning tokens figuring out the API every time.
 
+**20 scripts** covering every Avoma v1 endpoint. Built by [Claudio](https://github.com/claudio-alakai) and [Vito](https://github.com/vitoclawleone) at [RBP Consulting](https://roofingbusinesspartner.com).
+
 ## Quick Start
 
 ### 1. Get your Avoma API key
@@ -17,25 +19,32 @@ Follow [Avoma's API Integration guide](https://help.avoma.com/api-integration-fo
 export AVOMA_API_KEY="your-client-key-here"
 ```
 
-The scripts also check `~/.openclaw/.env` and `~/.openclaw/workspace/.env` automatically.
+The scripts also check `~/.openclaw/.env`, `~/.openclaw/workspace/.env`, and `openclaw.json` automatically.
 
 ### 3. Run a script
 
 ```bash
-# List meetings from the last 7 days
-bash scripts/avoma-meetings.sh 2026-04-14 2026-04-20
+# Quick lookup: what meetings happened this week?
+bash scripts/avoma-recent.sh 7
 
-# Get AI notes for a specific meeting
+# Pull everything for a meeting at once — transcript, notes, insights, snippets
+bash scripts/avoma-meeting-full.sh <MEETING_UUID> ./output/client-name/
+cat ./output/client-name/transcript.txt
+
+# Get AI notes in markdown
 bash scripts/avoma-notes.sh <MEETING_UUID> --format markdown
-
-# Get a transcript
-bash scripts/avoma-transcript.sh <MEETING_UUID>
 
 # Engagement analytics for Q1
 bash scripts/avoma-engagement.sh 2026-01-01 2026-03-31 --summary
 ```
 
 ## Scripts
+
+### Workflow Helpers (Start Here)
+| Script | What it does |
+|--------|-------------|
+| `avoma-recent.sh` | Quick list of recent meetings with UUIDs — `avoma-recent.sh 7` for the last week |
+| `avoma-meeting-full.sh` | One-shot pull: transcript + notes + insights + snippets + sentiments → saved to disk |
 
 ### Core Meeting Operations
 | Script | What it does |
@@ -62,12 +71,6 @@ bash scripts/avoma-engagement.sh 2026-01-01 2026-03-31 --summary
 | `avoma-scorecard-evals.sh` | List scorecard evaluations (filter by date, meeting, user, scorecard) |
 | `avoma-engagement.sh` | Engagement analytics — who's listening, sharing, commenting on meetings |
 
-### Workflow Helpers
-| Script | What it does |
-|--------|-------------|
-| `avoma-recent.sh` | Quick list of recent meetings with UUIDs — first step before pulling data |
-| `avoma-meeting-full.sh` | One-shot pull: transcript + notes + insights + snippets + sentiments for one meeting |
-
 ### Revenue Intelligence (Beta)
 | Script | What it does |
 |--------|-------------|
@@ -85,7 +88,7 @@ bash scripts/avoma-engagement.sh 2026-01-01 2026-03-31 --summary
 ## How It Works
 
 All scripts source `scripts/avoma-config.sh` which handles:
-- **Auth**: Reads `AVOMA_API_KEY` from environment or `.env` files
+- **Auth**: Reads `AVOMA_API_KEY` from environment, `.env` files, or `openclaw.json`
 - **Rate limits**: 60 requests/minute — errors print clearly on 429
 - **Error handling**: HTTP status detection with clear error messages
 - **Date formatting**: Accepts `YYYY-MM-DD` (auto-converts to RFC3339 UTC)
@@ -124,20 +127,32 @@ Drop the `skills/avoma/` directory into your workspace `skills/` folder. OpenCla
 
 Full OpenAPI v1 spec is in `references/openapi-v1.yml` for when you need to check field names, query params, or response shapes.
 
-**Rate limit:** 60 requests per minute. Scripts will tell you when you hit it.
-
-**Dates:** All UTC, RFC3339 format. Scripts accept `YYYY-MM-DD` for convenience.
-
-**Pagination:** Most list endpoints return `{count, next, previous, results}`. Use `--page-size 100` for max page size.
+- **Rate limit:** 60 requests per minute. Scripts will tell you when you hit it.
+- **Dates:** All UTC, RFC3339 format. Scripts accept `YYYY-MM-DD` for convenience.
+- **Pagination:** Most list endpoints return `{count, next, previous, results}`. Use `--page-size 100` for max page size.
 
 ## Contributing
 
-PRs welcome. If you add a script, follow the pattern:
+All changes go through PRs. Only the repo owner merges.
+
+If you add a script, follow the pattern:
 1. Source `avoma-config.sh` at the top
 2. Use `avoma_curl METHOD /endpoint/` for all API calls
-3. Add a usage comment block
+3. Add a usage comment block with examples
 4. Add it to the table in SKILL.md and this README
+5. Test against the live API before opening the PR
+
+See [CLAUDE.md](CLAUDE.md) for AI agent instructions and [AGENTS.md](AGENTS.md) for the full operating guide.
+
+## API Key Management
+
+Each user/agent needs their own Avoma API key. Keys are **never** committed to this repo.
+
+**Where to store it:**
+- OpenClaw agents: `AVOMA_API_KEY=xxx` in `~/.openclaw/.env`
+- Claude Code / terminal: `export AVOMA_API_KEY=xxx`
+- The scripts check three locations automatically (env var → `.env` files → `openclaw.json`)
 
 ## License
 
-Internal RBP tool. Team members: get your own API key from Avoma, don't share keys.
+Internal RBP Consulting tool. Team members: get your own API key from Avoma, don't share keys.
